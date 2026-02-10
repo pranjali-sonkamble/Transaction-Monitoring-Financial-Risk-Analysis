@@ -6,6 +6,15 @@ The objective of this project is to simulate an **AML-style transaction monitori
 The project replicates how financial crime teams analyze large-scale transaction data to detect potential money laundering patterns, generate alerts, and conduct account-level investigations.
 
 ---
+## 📊 Dashboard Preview
+
+### Risk Overview – Suspicious Activity Monitoring
+![Risk Overview Dashboard](Risk_Overview_Dashboard.png)
+
+### Case Investigation – Account-Level Deep Dive
+![Case Investigation Dashboard](Case_Investigation_View.png)
+
+---
 
 ## Key Risk Indicators Implemented
 The transaction monitoring framework incorporates the following AML risk indicators:

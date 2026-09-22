@@ -82,10 +82,6 @@ The trade-off is reduced sensitivity to complex patterns that could be captured 
 
 Raw data and the full PBIX are omitted because of size.
 
-## 🧪 Model Validation
-
-The next validation steps are documented in [Model Validation Plan](docs/MODEL_VALIDATION_PLAN.md), including ground-truth evaluation, threshold sensitivity, pattern coverage, and reproducibility checks.
-
 ## ⚠️ Limitations & Future Work
 
 - Validate the rule thresholds against the dataset's `Is_laundering` ground-truth label.

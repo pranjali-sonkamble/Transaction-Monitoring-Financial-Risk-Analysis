@@ -49,61 +49,15 @@ Accounts scoring **80+** were surfaced as High or Severe risk for dashboard inve
 
 ## 📊 Dashboard
 
-The Power BI dashboard has been repolished into a five-page AML / financial risk analytics workspace with a consistent dark enterprise risk-analytics design system.
+### Risk Overview
+![Risk Overview Dashboard](Risk_Overview_Dashboard.png)
 
-### Dashboard Pages
+Portfolio-level monitoring of risk severity, transaction value, geographic distribution, and trends.
 
-1. **Overview** — portfolio-level transaction, risk, laundering, and geographic monitoring.
-2. **Transaction Intelligence** — transaction trends, transaction value, payment-type distribution, currency distribution, sender/receiver country activity, and transaction-value bands.
-3. **Risk Accounts** — risk-level distribution, risk-score distribution, transaction value by risk level, high-risk account analysis, and account-level risk details.
-4. **Geographic Analysis** — country and regional transaction activity, transaction value, cross-border activity, high-risk transactions, country-pair flows, and country risk summaries.
-5. **Investigation** — transaction-level investigation, dynamic investigation summary, risk indicators, suspicious accounts, risk-score analysis, and laundering-focused investigation workflow.
+### Case Investigation
+![Case Investigation Dashboard](Case_Investigation_View.png)
 
-### Dashboard Preview
-
-#### Overview
-![AML Risk Analytics — Overview](Overview.png)
-
-Portfolio-level monitoring of transaction volume, transaction value, risk trends, laundering activity, and geographic distribution.
-
-#### Transaction Intelligence
-![AML Risk Analytics — Transaction Intelligence](Transaction_Intelligence.png)
-
-Detailed analysis of transaction trends, transaction values, payment types, currencies, sender/receiver countries, and transaction-value distribution.
-
-#### Risk Accounts
-![AML Risk Analytics — Risk Accounts](Risk_Accounts.png)
-
-Risk-focused account analysis covering High and Severe risk populations, risk scores, transaction values, receiver networks, and account-level details.
-
-#### Geographic Analysis
-![AML Risk Analytics — Geographic Analysis](Geographic_Analysis.png)
-
-Country, regional, and cross-border analysis of transaction volume, transaction value, risk activity, country pairs, and geographic risk patterns.
-
-#### Investigation
-![AML Risk Analytics — Investigation](Investigation.png)
-
-Transaction-level investigation workflow with a selected-transaction summary, risk indicators, suspicious-account analysis, and laundering-focused filtering.
-
-### Dashboard Capabilities
-
-- Transaction monitoring and transaction trend analysis
-- Transaction value analysis and distribution
-- High and Severe risk account analysis
-- Risk-score and risk-level distribution
-- AML / laundering transaction analysis
-- Flagged transaction monitoring
-- Geographic and cross-border transaction analysis
-- Country and regional risk analysis
-- Transaction-level investigation workflow
-- Dynamic investigation summary using selected transaction context
-- Suspicious account and risk-indicator analysis
-- Synchronized date filtering across all five dashboard pages
-- Investigation page filtering focused on transactions with `Is_laundering = 1`
-
-The final Power BI report is `AML_Transaction_Monitoring_Risk_Analytics.pbix`. The report file is not currently stored in this repository because the repository previously omitted the full PBIX due to file size.
-
+Account-level drill-through for transaction history, receivers, payment types, and activity patterns.
 ## 🔎 Key Findings
 
 - **13,424 accounts** were classified as High or Severe risk under the project's rule model.

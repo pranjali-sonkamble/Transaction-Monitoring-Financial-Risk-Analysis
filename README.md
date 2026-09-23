@@ -58,6 +58,7 @@ Portfolio-level monitoring of risk severity, transaction value, geographic distr
 ![Case Investigation Dashboard](Case_Investigation_View.png)
 
 Account-level drill-through for transaction history, receivers, payment types, and activity patterns.
+
 ## 🔎 Key Findings
 
 - **13,424 accounts** were classified as High or Severe risk under the project's rule model.

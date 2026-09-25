@@ -98,7 +98,7 @@ A 5-page interactive Power BI report, moving from portfolio-level triage down to
 
 ### Overview
 Portfolio-level entry point: total risk accounts, high-risk accounts, transaction/risk trend over time, risk-level distribution, top laundering types, geographic distribution, and a table of recent suspicious transactions.
-![Overview](C:\Users\eg2035tu\Downloads\AML_Project\powerbi\Overview.png)
+![Overview](Overview.png)
 
 ### Transaction Intelligence
 Full transaction-level view across the flagged accounts' activity: volume and value trend, currency distribution, sender/receiver country breakdown, transaction value distribution, and top sender/receiver accounts by value.
@@ -107,15 +107,15 @@ Full transaction-level view across the flagged accounts' activity: volume and va
 
 ### Risk Accounts
 Account-level risk profile: risk level and score distribution, transaction value/count by risk level, unique receivers by risk level, and a ranked table of top high-risk accounts by score.
-![Risk Accounts](powerbi\Overview.png)
+![Risk Accounts](Transaction_Intelligence.png)
 
 ### Geographic Analysis
 Cross-border and regional view: transaction volume/value by country, high-risk transactions by country, top sender→receiver country pairs, and a quantified country risk summary table.
-![Geographic Analysis](powerbi\Overview.png)
+![Geographic Analysis](Risk_Accounts.png)
 
 ### Investigation
 Case-level drill-through: a filterable transaction investigation table, an investigation summary panel (populates on row selection), risk indicators by transaction, risk score vs. transaction amount, risk level distribution, and a top suspicious accounts leaderboard.
-![Investigation](powerbi\Overview.png)
+![Investigation](Geographic_Analysis.png)
 
 ---
 

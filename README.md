@@ -45,13 +45,13 @@ SQL (SQLite) — Rule-based Risk Scoring (risk_rules.sql)
 customer_risk_categorized — Account-level Risk Tiers
         │
         ▼
-dashboard_cases — Curated account-level case output (~13,424 flagged accounts)
+dashboard_cases.csv — Published account-level case output (~13,424 flagged accounts)
         │
         ▼
-dashboard_transactions — Transaction-level detail for those flagged accounts
+[dashboard_transactions — intended transaction-level detail; not included]
         │
         ▼
-Power BI — 5-page interactive report
+Power BI — 5-page report concept (static screenshots included; .pbix not included)
 (Overview · Transaction Intelligence · Risk Accounts · Geographic Analysis · Investigation)
 ```
 

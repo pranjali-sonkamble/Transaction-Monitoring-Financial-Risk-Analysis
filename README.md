@@ -51,11 +51,11 @@ dashboard_cases.csv — Published account-level case output (~13,424 flagged acc
 [dashboard_transactions — intended transaction-level detail; not included]
         │
         ▼
-Power BI — 5-page report concept (static screenshots included; .pbix not included)
+Power BI — 5-page report (editable .pbix available in the GitHub release)
 (Overview · Transaction Intelligence · Risk Accounts · Geographic Analysis · Investigation)
 ```
 
-The intended dashboard design uses two grains: `dashboard_cases` holds one row per flagged **account** (risk score, tier, transaction/receiver counts), while `dashboard_transactions` is intended to hold individual transactions for those accounts. The transaction-level table and the Power BI report file are not included in this repository, so that part of the data flow cannot currently be reproduced from the published files alone. The screenshots below are provided as static previews, not as an interactive report.
+The intended dashboard design uses two grains: `dashboard_cases` holds one row per flagged **account** (risk score, tier, transaction/receiver counts), while `dashboard_transactions` is intended to hold individual transactions for those accounts. The transaction-level table is not included in this repository, so that part of the data flow cannot currently be reproduced from the published files alone. The screenshots below are static previews. The editable Power BI report is available as a downloadable release asset: [Download the AML Power BI report (.pbix)](https://github.com/pranjali-sonkamble/Transaction-Monitoring-Financial-Risk-Analysis/releases/download/v1.0.0/AML_Transaction_Monitoring_Risk_Analytics.pbix).
 
 > **Reproducibility note:** `dashboard_cases.csv` is produced by `risk_rules.sql`. The generation process for the intended transaction-level `dashboard_transactions` table has not been verified, so it is not documented as a reproducible step.
 
@@ -141,7 +141,7 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 1. Download the SAML-D dataset (published by Oztas et al., available via Kaggle) and load it into SQLite as `saml_d_raw`.
 2. Run `risk_rules.sql` end-to-end — it builds the risk scoring tables, categorizes accounts into tiers, and produces `dashboard_cases.csv`.
 3. Use `dashboard_cases.csv` to inspect the published account-level output. The transaction-level `dashboard_transactions` table and its generation process are not included or verified in this repository.
-4. The five dashboard screenshots in this repository are static previews. The editable Power BI (`.pbix`) report is **not included**; do not expect to open or refresh an interactive report from this repository alone.
+4. The five dashboard screenshots in this repository are static previews. Download the editable Power BI (`.pbix`) report from the [v1.0.0 GitHub release](https://github.com/pranjali-sonkamble/Transaction-Monitoring-Financial-Risk-Analysis/releases/download/v1.0.0/AML_Transaction_Monitoring_Risk_Analytics.pbix). The raw dataset and the transaction-level `dashboard_transactions` generation process are not included, so refreshing the report may require reconstructing those inputs.
 
 *(The raw SAML-D dataset is not included due to size. The repository provides `risk_rules.sql`, `dashboard_cases.csv`, and static dashboard screenshots.)*
 
@@ -152,7 +152,7 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 - **No validation against ground truth.** SAML-D includes an `Is_laundering` label, but this project's rule thresholds ($100K / $250K / 300 transactions) were chosen heuristically and not checked against it. A natural next step: compute precision/recall of the current rules against the true label, and use that to justify or retune the thresholds.
 - **No entity-resolution or network view.** Accounts are scored independently; a graph-based approach (shared receivers, device/IP overlap where available) would catch coordinated multi-account laundering rings that this account-by-account scoring misses.
 - **Static, batch-scored.** Everything here is computed once over the full dataset; a production system would need incremental/near-real-time scoring as new transactions arrive.
-- **Full raw data and editable Power BI report are not included.** Reproduction is currently limited to the SQL script and the published `dashboard_cases.csv`; the transaction-level table-generation process remains undocumented.
+- **Full raw data and transaction-level table generation are not included.** The editable Power BI report is available in the [GitHub release](https://github.com/pranjali-sonkamble/Transaction-Monitoring-Financial-Risk-Analysis/releases/tag/v1.0.0), but refreshing it may require reconstructing the missing transaction-level input; that generation process remains undocumented.
 
 ---
 

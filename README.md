@@ -166,15 +166,16 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 
 ## Data Source & Licensing
 
-### SAML-D synthetic AML benchmark
+**Dataset:** SAML-D, a synthetic anti-money-laundering transaction dataset. All accounts and transactions are simulated; no real customer data is used.
 
-The project uses the SAML-D dataset described by Oztas et al. in the IEEE ICEBE 2023 publication, [DOI: 10.1109/ICEBE59045.2023.00028](https://doi.org/10.1109/ICEBE59045.2023.00028). The dataset was obtained via Kaggle. **A dataset-specific license has not been independently confirmed**, so this repository does not claim that the dataset is licensed under MIT or any other license. Check the dataset's Kaggle page and its accompanying terms before redistributing the dataset or derivative files.
+- Oztas, B., Cetinkaya, D., Adedoyin, F., Budka, M., Dogan, H. and Aksu, G. (2023). *Enhancing Anti-Money Laundering: Development of a Synthetic Transaction Monitoring Dataset.* 2023 IEEE International Conference on e-Business Engineering (ICEBE), pp. 47-54. DOI: [10.1109/ICEBE59045.2023.00028](https://doi.org/10.1109/ICEBE59045.2023.00028)
+- Dataset page: [Kaggle, Synthetic Transaction Monitoring Dataset (AML)](https://www.kaggle.com/datasets/berkanoztas/synthetic-transaction-monitoring-dataset-aml)
 
-### Project code and documentation
+The raw dataset is not redistributed here. `dashboard_cases.csv` and the dashboard screenshots are derived from it. They remain subject to the dataset owners' terms; check the Kaggle page for the current terms before reusing them.
 
-The MIT License in this repository applies to the project's original code and documentation only. It does **not** grant rights to the SAML-D dataset or override the dataset provider's terms.
+**Code license:** The SQL, documentation and original work in this repository are released under the [MIT License](LICENSE). The MIT License does not apply to the SAML-D data.
 
----
+This project is an independent portfolio exercise and is not affiliated with or endorsed by the dataset authors.
 
 ## Author
 

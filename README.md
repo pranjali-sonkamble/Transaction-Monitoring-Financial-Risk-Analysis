@@ -97,6 +97,8 @@ The Power BI report displays a smaller typology-tagged transaction subset (appro
 
 A 5-page interactive Power BI report, moving from portfolio-level triage down to single-transaction investigation:
 
+> **Dashboard validation caveat:** The Overview page's risk-account and transaction KPIs, donut labels, and the relationship between account-level risk scores and typology-tagged transaction rows have not yet been reconciled against the underlying model measures. Treat those visuals as a presentation preview until the measures and filter context are checked in Power BI Desktop. The SQL-derived account score is calculated from the full sender-account transaction history; a visual showing only a tagged transaction subset must not imply that the displayed subset alone generated the account's score.
+
 ### Overview
 Portfolio-level entry point: total risk accounts, high-risk accounts, transaction/risk trend over time, risk-level distribution, top laundering types, geographic distribution, and a table of recent suspicious transactions.
 ![Overview](docs/images/Overview.png)

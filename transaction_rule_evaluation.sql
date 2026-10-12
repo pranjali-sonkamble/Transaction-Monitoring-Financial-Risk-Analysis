@@ -33,7 +33,7 @@ counts AS (
         SUM(CASE WHEN n.actual_positive = 0 THEN 1 ELSE 0 END) AS actual_negative_rows,
         SUM(CASE WHEN n.actual_positive = 1 AND n.amount_value > t.threshold_amount THEN 1 ELSE 0 END) AS true_positive_rows,
         SUM(CASE WHEN n.actual_positive = 0 AND n.amount_value > t.threshold_amount THEN 1 ELSE 0 END) AS false_positive_rows,
-        SUM(CASE WHEN n.actual_positive = 1 AND NOT (n.amount_value > t.threshold_amount) THEN 1 ELSE 0 END) AS false_negative_rows,
+        SUM(CASE WHEN n.actual_positive = 1 AND COALESCE(n.amount_value > t.threshold_amount, 0) = 0 THEN 1 ELSE 0 END) AS false_negative_rows,
         SUM(CASE WHEN n.actual_positive = 0 AND NOT (n.amount_value > t.threshold_amount) THEN 1 ELSE 0 END) AS true_negative_rows,
         SUM(CASE WHEN n.actual_positive IS NULL AND n.amount_value > t.threshold_amount THEN 1 ELSE 0 END) AS alerts_with_unrecognized_label
     FROM thresholds AS t

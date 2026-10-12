@@ -21,15 +21,15 @@ An AML-style (Anti-Money Laundering) transaction monitoring system that identifi
 
 ## Problem Statement
 
-Financial institutions must flag suspicious transaction patterns for regulatory compliance (AML/KYC). Manually reviewing millions of transactions is infeasible — this project simulates how a financial crime/compliance team would build a **rule-based monitoring system** to surface the highest-risk accounts from a large transaction dataset, replacing "review everything" with "review what matters first."
+Financial institutions must flag suspicious transaction patterns for regulatory compliance (AML/KYC). Manually reviewing millions of transactions is infeasible — this project simulates a **rule-based triage workflow** that ranks accounts for further review. In the current output, flagged accounts are associated with approximately **50.0% of all transactions**, so the rules should be treated as an initial prioritization prototype rather than evidence that the review queue is small or efficient. The fraction of distinct sender accounts flagged and precision/recall against the dataset's ground-truth label have not yet been calculated.
 
 ---
 
 ## Dataset
 
-This project uses **SAML-D**, a published synthetic anti-money laundering benchmark dataset (Oztas et al.), containing **9,504,852 transactions** across 12 features, including sender/receiver account IDs, amount, payment type, and sender/receiver bank locations. The dataset spans transactions from **November 2022 to July 2023**. It was chosen because it's purpose-built for AML research — it models realistic laundering typologies (structuring, fan-out, cross-border layering) rather than generic transaction noise, and unlike real bank data, it can be shared and analyzed without privacy/regulatory restrictions.
+This project uses **SAML-D**, a published synthetic anti-money-laundering benchmark dataset (Oztas et al.), containing **9,504,852 transactions** across 12 features, including sender/receiver account IDs, amount, payment type, and sender/receiver bank locations. The dashboard currently displays a date range of **October 2022 to August 2023**; this range should be interpreted as the range shown in the report, not evidence that every month has equal coverage. SAML-D is synthetic benchmark data, not real bank activity, so patterns observed here must not be generalized directly to real financial institutions or real-world laundering prevalence.
 
-> Note: SAML-D also ships with a ground-truth `Is_laundering` label. This project's rule-based scores were **not** validated against that label — see [Limitations](#limitations--future-work).
+> **Label and validation caveat:** SAML-D includes a ground-truth `Is_laundering` field. The SQL scoring rules in this repository do **not** use that field and have not been evaluated against it. The source and derivation of the typology labels currently displayed in the Power BI report have not been independently verified; therefore, those labels must not be presented as typologies detected by this SQL rule engine. See [Limitations](#limitations--future-work).
 
 ---
 
@@ -55,9 +55,9 @@ Power BI — 5-page report (editable .pbix available in the GitHub release)
 (Overview · Transaction Intelligence · Risk Accounts · Geographic Analysis · Investigation)
 ```
 
-The intended dashboard design uses two grains: `dashboard_cases` holds one row per flagged **account** (risk score, tier, transaction/receiver counts), while `dashboard_transactions` is intended to hold individual transactions for those accounts. The transaction-level table is not included in this repository, so that part of the data flow cannot currently be reproduced from the published files alone. The screenshots below are static previews. The editable Power BI report is available as a downloadable release asset: [Download the AML Power BI report (.pbix)](https://github.com/pranjali-sonkamble/Transaction-Monitoring-Financial-Risk-Analysis/releases/download/v1.0.0/AML_Transaction_Monitoring_Risk_Analytics.pbix).
+`dashboard_cases` contains one row per flagged **sender account** (risk score, tier, transaction count/value, maximum single-transaction amount, and unique receiver count). `dashboard_transactions` contains individual transactions sent by High/Severe accounts. The raw SAML-D dataset is not included, so users must obtain it separately and load it into SQLite before running the SQL. The screenshots below are static previews. The editable Power BI report is available as a downloadable release asset: [Download the AML Power BI report (.pbix)](https://github.com/pranjali-sonkamble/Transaction-Monitoring-Financial-Risk-Analysis/releases/download/v1.0.0/AML_Transaction_Monitoring_Risk_Analytics.pbix).
 
-> **Reproducibility note:** `dashboard_cases.csv` is produced by `risk_rules.sql`. The generation process for the intended transaction-level `dashboard_transactions` table has not been verified, so it is not documented as a reproducible step.
+> **Reproducibility note:** `risk_rules.sql` builds the account-level `dashboard_cases` table and transaction-level `dashboard_transactions` table from `saml_d_raw`. Export `dashboard_cases` to CSV separately using SQLite's CSV output mode. The published `dashboard_cases.csv` is a snapshot, not a substitute for the raw input data.
 
 ---
 
@@ -89,7 +89,7 @@ This is a deliberately simple, additive rule model rather than a weighted/ML-bas
 
 ### Laundering-Type Classification
 
-Within the flagged accounts' transaction history, a subset of transactions is further tagged with a specific laundering typology — e.g. Structuring, Fan-In, Layered Fan-In, Cash Withdrawal, Over-Invoicing, Cycle. This subset (≈3K transactions, ~$347.74M, **0.84%** of flagged transaction value) represents the highest-confidence, pattern-matched cases and is what the Overview and Investigation pages surface as the primary case queue.
+The Power BI report displays a smaller typology-tagged transaction subset (approximately 3K transactions, according to the current dashboard). However, the tagging logic and provenance have not been verified against the SQL in this repository. These labels are therefore **dashboard classifications of unverified provenance**, not confirmed detections produced by the risk-scoring SQL. Do not interpret the tagged subset as a measured precision or as independently confirmed laundering.
 
 ---
 
@@ -99,34 +99,34 @@ A 5-page interactive Power BI report, moving from portfolio-level triage down to
 
 ### Overview
 Portfolio-level entry point: total risk accounts, high-risk accounts, transaction/risk trend over time, risk-level distribution, top laundering types, geographic distribution, and a table of recent suspicious transactions.
-![Overview](Overview.png)
+![Overview](docs/images/Overview.png)
 
 ### Transaction Intelligence
 Full transaction-level view across the flagged accounts' activity: volume and value trend, currency distribution, sender/receiver country breakdown, transaction value distribution, and top sender/receiver accounts by value.
-![Transaction Intelligence](Transaction_Intelligence.png)
+![Transaction Intelligence](docs/images/Transaction_Intelligence.png)
 
 ### Risk Accounts
 Account-level risk profile: risk level and score distribution, transaction value/count by risk level, unique receivers by risk level, and a ranked table of top high-risk accounts by score.
-![Risk Accounts](Risk_Accounts.png)
+![Risk Accounts](docs/images/Risk_Accounts.png)
 
 ### Geographic Analysis
 Cross-border and regional view: transaction volume/value by country, high-risk transactions by country, top sender→receiver country pairs, and a quantified country risk summary table.
-![Geographic Analysis](Geographic_Analysis.png)
+![Geographic Analysis](docs/images/Geographic_Analysis.png)
 
 ### Investigation
 Case-level drill-through: a filterable transaction investigation table, an investigation summary panel (populates on row selection), risk indicators by transaction, risk score vs. transaction amount, risk level distribution, and a top suspicious accounts leaderboard.
-![Investigation](Investigation.png)
+![Investigation](docs/images/Investigation.png)
 
 ---
 
 ## Key Findings
 
-- **13,424 accounts** were classified as High or Severe risk, representing **$41.17B** in flagged transaction value — split almost evenly between **Severe (47.9%)** and **High (52.1%)**.
-- The most severe accounts show a consistent fingerprint: **700+ transactions**, **50+ unique receiver accounts**, and several million dollars in cumulative value each — e.g. one account sent 743 transactions to 58 distinct receivers totaling $5.05M. This fan-out pattern (many receivers, high frequency) is a classic laundering/"smurfing" signature, distinct from a single large one-off transfer.
+- **13,424 accounts** were classified as High or Severe risk in the published account-level output, representing **$41.17B** in flagged transaction value — split between **Severe (47.9%)** and **High (52.1%)**. These are rule-triggered risk indicators, not confirmed laundering cases.
+- The Severe tier has **6,433 accounts**. Based on the current audit, its median is **429 transactions** and **40 unique receivers**; only **6 accounts** have 700 or more transactions. One top account sent 743 transactions to 58 distinct receivers totaling $5.05M. This is an example of a high-activity account, not a representative profile for every Severe account.
 - A case-level drill-through surfaced a concrete structuring pattern: one account made **11 cross-border transfers to the same receiver within a single day**, each individually in the $20K–21K range — well under any single-transaction alert threshold, but cumulatively over $230K in a day. This is exactly the kind of activity a pure "amount > $100K" rule would miss, which is why the frequency-based rule (+40 for >300 transactions) matters as a complementary signal.
 - Geographic analysis is now quantified: the **UK** leads both in transaction volume and in the number of flagged/risk transactions, while **Switzerland** shows the highest cross-border transaction *value* among non-UK countries. The most active cross-border corridors are UK→Mexico, UK→India, and UK→Germany.
-- The daily transaction-value trend (Nov 2022–Jul 2023) is fairly consistent rather than showing isolated spikes — suspicious activity here looks more like a steady baseline behavior than rare bursts, which is itself a useful finding: it suggests the flagged accounts behave this way *routinely*, not just during isolated incidents.
-- Within the flagged population, only **0.84%** of transaction value is attributable to transactions explicitly tagged with a known laundering typology — the rest is other activity on those same accounts. This distinction (flagged *account* vs. flagged *transaction*) is what separates the account-level Risk Accounts view from the narrower, higher-confidence case queue on Overview/Investigation.
+- The dashboard's transaction-value trend appears relatively steady over the displayed period. Because SAML-D is synthetic, this may reflect assumptions in the data-generation process and should not be interpreted as evidence that real-world suspicious activity behaves routinely.
+- The dashboard displays a typology-tagged subset, but the provenance of those tags has not been verified. The share of this subset is not a validated measure of laundering detection quality.
 
 ## Business Recommendations
 
@@ -138,10 +138,10 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 
 ## How to Reproduce
 
-1. Download the SAML-D dataset (published by Oztas et al., available via Kaggle) and load it into SQLite as `saml_d_raw`.
-2. Run `risk_rules.sql` end-to-end — it builds the risk scoring tables, categorizes accounts into tiers, and produces `dashboard_cases.csv`.
-3. Use `dashboard_cases.csv` to inspect the published account-level output. The transaction-level `dashboard_transactions` table and its generation process are not included or verified in this repository.
-4. The five dashboard screenshots in this repository are static previews. Download the editable Power BI (`.pbix`) report from the [v1.0.0 GitHub release](https://github.com/pranjali-sonkamble/Transaction-Monitoring-Financial-Risk-Analysis/releases/download/v1.0.0/AML_Transaction_Monitoring_Risk_Analytics.pbix). The raw dataset and the transaction-level `dashboard_transactions` generation process are not included, so refreshing the report may require reconstructing those inputs.
+1. Download the SAML-D dataset (published by Oztas et al.; see the Kaggle link below) and import the transaction file into a SQLite database table named `saml_d_raw`. Confirm that the imported columns include `Sender_account`, `Receiver_account`, `Amount`, `Date`, `Time`, `Payment_type`, `Sender_bank_location`, and `Receiver_bank_location`.
+2. Run the SQL script from the directory containing your database: `sqlite3 saml_d.db < risk_rules.sql`. The script drops and rebuilds its derived tables, so use a working copy of your database if you need to preserve existing outputs.
+3. Export the account-level output to CSV: `sqlite3 -header -csv saml_d.db "SELECT * FROM dashboard_cases;" > dashboard_cases.csv`. The script also creates `dashboard_transactions` for the flagged accounts.
+4. The five dashboard screenshots are static previews. Download the editable Power BI (`.pbix`) report from the [v1.0.0 GitHub release](https://github.com/pranjali-sonkamble/Transaction-Monitoring-Financial-Risk-Analysis/releases/download/v1.0.0/AML_Transaction_Monitoring_Risk_Analytics.pbix). The report's typology-label provenance and exact data-refresh inputs are not yet verified; refreshing it may require rebuilding the relevant Power BI model.
 
 *(The raw SAML-D dataset is not included due to size. The repository provides `risk_rules.sql`, `dashboard_cases.csv`, and static dashboard screenshots.)*
 
@@ -149,7 +149,9 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 
 ## Limitations & Future Work
 
-- **No validation against ground truth.** SAML-D includes an `Is_laundering` label, but this project's rule thresholds ($100K / $250K / 300 transactions) were chosen heuristically and not checked against it. A natural next step: compute precision/recall of the current rules against the true label, and use that to justify or retune the thresholds.
+- **No ground-truth validation yet.** SAML-D includes `Is_laundering`, but the thresholds ($100K / $250K / 300 transactions) are heuristic and have not been evaluated against that field. Precision, recall, false-positive rate, and the share of distinct sender accounts flagged remain uncomputed. Also, the share of flagged transactions is high (about 50.0%), so the current rules should not be described as a narrow or validated review queue.
+- **Typology provenance is unverified.** The SQL script does not implement Structuring, Fan-In, Layered Fan-In, Over-Invoicing, Cycle, or other typology classifiers. The Power BI report displays such labels, but the source field and transformation that populate them have not been verified. They may reflect dataset-provided labels or a separate transformation; until traced, they must not be claimed as detections produced by this project.
+- **Synthetic-data generalization.** Geographic concentration (including UK dominance) and apparently routine account behavior may be characteristics of SAML-D's generator. These are descriptive observations in this synthetic benchmark, not evidence of real-world geographic or behavioral patterns.
 - **No entity-resolution or network view.** Accounts are scored independently; a graph-based approach (shared receivers, device/IP overlap where available) would catch coordinated multi-account laundering rings that this account-by-account scoring misses.
 - **Static, batch-scored.** Everything here is computed once over the full dataset; a production system would need incremental/near-real-time scoring as new transactions arrive.
 - **Full raw data and transaction-level table generation are not included.** The editable Power BI report is available in the [GitHub release](https://github.com/pranjali-sonkamble/Transaction-Monitoring-Financial-Risk-Analysis/releases/tag/v1.0.0), but refreshing it may require reconstructing the missing transaction-level input; that generation process remains undocumented.

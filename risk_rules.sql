@@ -1,36 +1,31 @@
-SELECT COUNT(*) FROM saml_d_raw;
+-- Transaction Monitoring & Financial Risk Indicator Analysis
+-- SQLite pipeline for SAML-D.
+-- Input requirement: import the source transaction file as saml_d_raw.
+-- This script does not assign laundering typologies or use Is_laundering.
+-- It scores sender accounts using transparent heuristic rules only.
+--
+-- WARNING: DROP statements rebuild derived outputs. Run against a working
+-- copy of your database if you need to preserve prior derived tables.
 
-select 
-min(Amount) as min_amt,
-max(Amount) as max_amt,
-avg(Amount) as avg_amt
-from saml_d_raw;
+PRAGMA foreign_keys = OFF;
+BEGIN TRANSACTION;
 
-select Amount, Sender_account, Receiver_account, Payment_type
-from saml_d_raw
-order by Amount DESC
-limit 10;
+DROP VIEW IF EXISTS investigation_queue;
+DROP TABLE IF EXISTS dim_date;
+DROP TABLE IF EXISTS dashboard_cases;
+DROP TABLE IF EXISTS dashboard_transactions;
+DROP TABLE IF EXISTS investigation_summary;
+DROP TABLE IF EXISTS customer_risk_categorized;
+DROP TABLE IF EXISTS customer_risk;
+DROP TABLE IF EXISTS high_activity_alerts;
+DROP TABLE IF EXISTS high_activity_accounts;
+DROP TABLE IF EXISTS high_value_alerts;
 
-SELECT
-Sender_bank_location,
-Receiver_bank_location,
-count(*) as txn_count
-from saml_d_raw
-group by Sender_bank_location, Receiver_bank_location
-order by txn_count DESC
-limit 10;
-
-select Sender_account,
-count(*) as txn_volume
-from saml_d_raw
-group by Sender_account
-order by txn_volume DESC
-limit 10;
-
+-- Exploratory high-value transaction extract.
 CREATE TABLE high_value_alerts AS
-SELECT 
-    Time,
+SELECT
     Date,
+    Time,
     Sender_account,
     Receiver_account,
     Amount,
@@ -40,141 +35,123 @@ SELECT
 FROM saml_d_raw
 WHERE Amount > 100000;
 
-select count(*) from high_value_alerts;
-
-create table high_value_accounts as
+-- Sender accounts with more than 300 transactions.
+CREATE TABLE high_activity_accounts AS
 SELECT
-Sender_account,
-count(*) as txn_volume
-from saml_d_raw
-group by Sender_account
-having txn_volume > 300;
+    Sender_account AS account_id,
+    COUNT(*) AS transaction_count
+FROM saml_d_raw
+GROUP BY Sender_account
+HAVING COUNT(*) > 300;
 
-alter table high_value_accounts
-rename to high_activit_accounts;
+-- All transactions belonging to high-activity sender accounts.
+CREATE TABLE high_activity_alerts AS
+SELECT t.*
+FROM saml_d_raw AS t
+JOIN high_activity_accounts AS h
+  ON t.Sender_account = h.account_id;
 
-select count(*) from high_activit_accounts;
-
-create table high_activit_alerts as
-select t.*
-from saml_d_raw t
-join high_activit_accounts h
-on t.Sender_account = h.Sender_account;
-
-select count(*) from high_activit_alerts;
-
-create table customer_risk as
+-- Start one row per distinct sender account at score zero.
+CREATE TABLE customer_risk AS
 SELECT
-Sender_account as account_id,
-0 as risk_score
-from saml_d_raw
-group by Sender_account;
+    Sender_account AS account_id,
+    0 AS risk_score
+FROM saml_d_raw
+GROUP BY Sender_account;
 
-update customer_risk set risk_score = risk_score + 50
-where account_id in (select distinct Sender_account
-from saml_d_raw
-where Amount > 100000);
-
-update customer_risk set risk_score = risk_score + 30
-where account_id in (
-select distinct Sender_account
-from saml_d_raw
-where Amount > 250000
+-- Rule 1: any transaction over $100,000 adds 50 points.
+UPDATE customer_risk
+SET risk_score = risk_score + 50
+WHERE account_id IN (
+    SELECT DISTINCT Sender_account
+    FROM saml_d_raw
+    WHERE Amount > 100000
 );
 
-update customer_risk set risk_score = risk_score + 40
-where account_id in(
-select Sender_account
-from high_activit_accounts
+-- Rule 2: any transaction over $250,000 adds another 30 points.
+-- This is additive with Rule 1 by design.
+UPDATE customer_risk
+SET risk_score = risk_score + 30
+WHERE account_id IN (
+    SELECT DISTINCT Sender_account
+    FROM saml_d_raw
+    WHERE Amount > 250000
 );
 
-select * from customer_risk
-order by risk_score DESC limit 20;
+-- Rule 3: more than 300 sent transactions adds 40 points.
+UPDATE customer_risk
+SET risk_score = risk_score + 40
+WHERE account_id IN (
+    SELECT account_id
+    FROM high_activity_accounts
+);
 
-select risk_score, count(*) as accounts
-from customer_risk 
-group by risk_score
-order by risk_score DESC;
-
-create table customer_risk_categorized as select
-account_id,risk_score,
-CASE
-when risk_score >= 120 then 'Severe'
-when risk_score >= 80 then 'High'
-when risk_score >= 40 then 'Medium'
-else 'low'
-end as risk_level
-from customer_risk;
-
-select risk_level, count(*)
-from customer_risk_categorized
-group by risk_level
-order by count(*) desc;
-
-create view investigation_queue as
+CREATE TABLE customer_risk_categorized AS
 SELECT
-t.date,
-t.time,
-t.Sender_account,
-t.Receiver_account,
-t.Amount,
-t.Payment_type,
-t.Sender_bank_location,
-t.Receiver_bank_location,
-r.risk_score,
-r.risk_level
-from saml_d_raw t
-join customer_risk_categorized r
-on t.Sender_account = r.account_id
-where r.risk_level in ('High','Severe');
+    account_id,
+    risk_score,
+    CASE
+        WHEN risk_score >= 120 THEN 'Severe'
+        WHEN risk_score >= 80 THEN 'High'
+        WHEN risk_score >= 40 THEN 'Medium'
+        ELSE 'Low'
+    END AS risk_level
+FROM customer_risk;
 
-select count(*) from investigation_queue;
+-- Transaction-level view for manual review of High/Severe sender accounts.
+CREATE VIEW investigation_queue AS
+SELECT
+    t.Date,
+    t.Time,
+    t.Sender_account,
+    t.Receiver_account,
+    t.Amount,
+    t.Payment_type,
+    t.Sender_bank_location,
+    t.Receiver_bank_location,
+    r.risk_score,
+    r.risk_level
+FROM saml_d_raw AS t
+JOIN customer_risk_categorized AS r
+  ON t.Sender_account = r.account_id
+WHERE r.risk_level IN ('High', 'Severe');
 
-create table investigation_summary as
-select 
-r.account_id,
-r.risk_level,
-r.risk_score,
-count(*) as total_transactions,
-sum(t.Amount) as total_amount,
-max(t.Amount) as max_transactions,
-count(distinct t.Receiver_account) as unique_receivers
-from customer_risk_categorized r
-join saml_d_raw t
-on r.account_id = t.Sender_account
-where r.risk_level in ('High','Severe')
-group by r.account_id, r.risk_level, r.risk_score;
+-- One row per High/Severe sender account.
+CREATE TABLE investigation_summary AS
+SELECT
+    r.account_id,
+    r.risk_level,
+    r.risk_score,
+    COUNT(*) AS total_transactions,
+    SUM(t.Amount) AS total_amount,
+    MAX(t.Amount) AS max_transaction_amount,
+    COUNT(DISTINCT t.Receiver_account) AS unique_receivers
+FROM customer_risk_categorized AS r
+JOIN saml_d_raw AS t
+  ON r.account_id = t.Sender_account
+WHERE r.risk_level IN ('High', 'Severe')
+GROUP BY r.account_id, r.risk_level, r.risk_score;
 
-select * from investigation_summary
-order by risk_score desc, total_amount DESC limit 10;
+-- Transaction-level data for the Power BI model.
+CREATE TABLE dashboard_transactions AS
+SELECT
+    t.Date,
+    t.Time,
+    t.Sender_account,
+    t.Receiver_account,
+    t.Amount,
+    t.Payment_type,
+    t.Sender_bank_location,
+    t.Receiver_bank_location,
+    r.risk_level,
+    r.risk_score
+FROM saml_d_raw AS t
+JOIN customer_risk_categorized AS r
+  ON t.Sender_account = r.account_id
+WHERE r.risk_level IN ('High', 'Severe');
 
-create table dashboard_transactions as
-select * 
-from saml_d_raw
-where Sender_account in (
-select account_id
-from customer_risk_categorized
-where risk_level in('High','Severe')
-);
-
-create table dashboard_transactions as select
-t.date,
-t.time,
-t.Sender_account,
-t.Receiver_account,
-t.Amount,
-t.Payment_type,
-t.Sender_bank_location,
-t.Receiver_bank_location,
-r.risk_level,
-r.risk_score
-from saml_d_raw t
-join customer_risk_categorized r
-on t.Sender_account = r.account_id
-where r.risk_level in ('High','Severe');
-
-SELECT COUNT(*) FROM dashboard_transactions;
-
+-- Account-level dashboard table. max_transaction_amount is an amount,
+-- not a transaction count.
 CREATE TABLE dashboard_cases AS
 SELECT
     account_id,
@@ -182,14 +159,18 @@ SELECT
     risk_score,
     total_transactions,
     total_amount,
-    max_transactions,
+    max_transaction_amount,
     unique_receivers
 FROM investigation_summary;
 
-SELECT COUNT(*) FROM dashboard_cases;
-
 CREATE TABLE dim_date AS
-SELECT DISTINCT
-    Date
+SELECT DISTINCT Date
 FROM dashboard_transactions;
 
+COMMIT;
+
+-- Sanity checks to run after the pipeline:
+-- SELECT COUNT(*) FROM saml_d_raw;
+-- SELECT risk_level, COUNT(*) FROM customer_risk_categorized GROUP BY risk_level;
+-- SELECT COUNT(*) FROM dashboard_cases;
+-- SELECT COUNT(*) FROM dashboard_transactions;

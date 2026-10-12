@@ -138,6 +138,19 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 
 ---
 
+## Transaction-Level Baseline Evaluation
+
+The separate [transaction_rule_evaluation.sql](transaction_rule_evaluation.sql) script evaluates four **single-transaction amount-only baselines** (Amount > $50K, $100K, $250K, and $500K) directly against Is_laundering. It is read-only and does not alter the account-level risk tables. Run it locally against the full saml_d_raw table:
+
+```bash
+sqlite3 -header -column saml_d.db < transaction_rule_evaluation.sql
+```
+
+This isolates a key question: how does a transaction-level threshold perform compared with assigning an account's High/Severe status to every transaction that account sent? Review the confusion-matrix counts as well as precision, recall, and specificity. Check labeled_rows against total_rows; investigate any nonzero alerts_with_unrecognized_label before interpreting the metrics. The SQL treats 1/true/yes as positive and 0/false/no as negative labels. Threshold comparisons are strict (Amount > threshold).
+
+**Interpretation caution:** amount-only rules are intentionally simplistic. A high-value transaction is not proof of laundering, and lower-value structuring or rapid repeated transfers may be missed. These metrics are diagnostic comparisons on synthetic SAML-D data—not production performance estimates or a basis for selecting a live AML threshold. The script must be run against the local raw dataset; no results are claimed here until its output is reviewed.
+
+---
 ## How to Reproduce
 
 1. Download the SAML-D dataset (published by Oztas et al.; see the Kaggle link below) and import the transaction file into a SQLite database table named `saml_d_raw`. Confirm that the imported columns include `Sender_account`, `Receiver_account`, `Amount`, `Date`, `Time`, `Payment_type`, `Sender_bank_location`, and `Receiver_bank_location`.

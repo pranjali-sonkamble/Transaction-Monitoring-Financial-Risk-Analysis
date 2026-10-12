@@ -55,7 +55,7 @@ WITH features AS (
      AND pd.sender_account IS t.Sender_account
      AND pd.receiver_account IS t.Receiver_account
 ),
-predictions AS (
+predictions AS MATERIALIZED (
     SELECT *,
         CASE WHEN amount_rule = 1 OR velocity_rule = 1 OR repeated_receiver_rule = 1
              THEN 1 ELSE 0 END AS combined_rule

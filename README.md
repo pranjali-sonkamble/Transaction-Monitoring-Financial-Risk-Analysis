@@ -15,6 +15,7 @@ An AML-style (Anti-Money Laundering) transaction monitoring system that identifi
 - [How to Reproduce](#how-to-reproduce)
 - [Limitations & Future Work](#limitations--future-work)
 - [Tools & Technologies](#tools--technologies)
+- [Data Source & Licensing](#data-source--licensing)
 
 ---
 
@@ -160,6 +161,18 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 - **SQL (SQLite)** — data ingestion, rule-based risk scoring, tiering logic
 - **Power BI** — 5-page interactive report (Overview, Transaction Intelligence, Risk Accounts, Geographic Analysis, Investigation), drill-through investigation view
 - **Dataset:** SAML-D synthetic AML benchmark (Oztas et al.)
+
+---
+
+## Data Source & Licensing
+
+### SAML-D synthetic AML benchmark
+
+The project uses the SAML-D dataset described by Oztas et al. in the IEEE ICEBE 2023 publication, [DOI: 10.1109/ICEBE59045.2023.00028](https://doi.org/10.1109/ICEBE59045.2023.00028). The dataset was obtained via Kaggle. **A dataset-specific license has not been independently confirmed**, so this repository does not claim that the dataset is licensed under MIT or any other license. Check the dataset's Kaggle page and its accompanying terms before redistributing the dataset or derivative files.
+
+### Project code and documentation
+
+The MIT License in this repository applies to the project's original code and documentation only. It does **not** grant rights to the SAML-D dataset or override the dataset provider's terms.
 
 ---
 

@@ -38,7 +38,7 @@ WITH sender_totals AS (
     FROM saml_d_raw
 ),
 flagged_senders AS (
-    SELECT COUNT(DISTINCT Sender_account) AS flagged_senders
+    SELECT COUNT(DISTINCT account_id) AS flagged_senders
     FROM customer_risk_categorized
     WHERE risk_level IN ('High', 'Severe')
 )

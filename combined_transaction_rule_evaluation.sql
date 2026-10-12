@@ -57,12 +57,12 @@ features AS (
         END AS combined_rule
     FROM normalized AS n
     JOIN sender_day AS sd
-      ON sd.source_date = n.source_date
-     AND sd.sender_account = n.sender_account
+      ON sd.source_date IS n.source_date
+     AND sd.sender_account IS n.sender_account
     JOIN sender_receiver_day AS pd
-      ON pd.source_date = n.source_date
-     AND pd.sender_account = n.sender_account
-     AND pd.receiver_account = n.receiver_account
+      ON pd.source_date IS n.source_date
+     AND pd.sender_account IS n.sender_account
+     AND pd.receiver_account IS n.receiver_account
 ),
 metrics AS (
     SELECT

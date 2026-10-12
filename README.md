@@ -55,9 +55,9 @@ Power BI — 5-page interactive report
 (Overview · Transaction Intelligence · Risk Accounts · Geographic Analysis · Investigation)
 ```
 
-The dashboard reads from two related tables at two different grains: `dashboard_cases` holds one row per flagged **account** (risk score, tier, transaction/receiver counts), and `dashboard_transactions` holds the individual **transactions** belonging to those same flagged accounts. Within that transaction-level table, a further subset is explicitly tagged with a laundering typology (Structuring, Fan-In, Layered Fan-In, Cash Withdrawal, Over-Invoicing, Cycle) — this is the narrowest, highest-confidence layer surfaced on the Overview and Investigation pages.
+The intended dashboard design uses two grains: `dashboard_cases` holds one row per flagged **account** (risk score, tier, transaction/receiver counts), while `dashboard_transactions` is intended to hold individual transactions for those accounts. The transaction-level table and the Power BI report file are not included in this repository, so that part of the data flow cannot currently be reproduced from the published files alone. The screenshots below are provided as static previews, not as an interactive report.
 
-> **TODO (confirm before final publish):** `dashboard_cases.csv` is confirmed to be produced by `risk_rules.sql`. The exact script/process that produces `dashboard_transactions` isn't yet documented here — add that step once confirmed so the reproduction instructions are complete.
+> **Reproducibility note:** `dashboard_cases.csv` is produced by `risk_rules.sql`. The generation process for the intended transaction-level `dashboard_transactions` table has not been verified, so it is not documented as a reproducible step.
 
 ---
 
@@ -140,10 +140,10 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 
 1. Download the SAML-D dataset (published by Oztas et al., available via Kaggle) and load it into SQLite as `saml_d_raw`.
 2. Run `risk_rules.sql` end-to-end — it builds the risk scoring tables, categorizes accounts into tiers, and produces `dashboard_cases.csv`.
-3. *(To confirm and document: the process that produces the transaction-level `dashboard_transactions` table used by the Power BI report.)*
-4. Open `AML_Transaction_Monitoring_Risk_Analytics.pbix` in Power BI Desktop and refresh against the tables above to regenerate the 5-page report.
+3. Use `dashboard_cases.csv` to inspect the published account-level output. The transaction-level `dashboard_transactions` table and its generation process are not included or verified in this repository.
+4. The five dashboard screenshots in this repository are static previews. The editable Power BI (`.pbix`) report is **not included**; do not expect to open or refresh an interactive report from this repository alone.
 
-*(Raw data isn't included in this repo due to size — `dashboard_cases.csv`, the `.pbix` file, and dashboard screenshots are provided so the output is inspectable directly.)*
+*(The raw SAML-D dataset is not included due to size. The repository provides `risk_rules.sql`, `dashboard_cases.csv`, and static dashboard screenshots.)*
 
 ---
 
@@ -152,7 +152,7 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 - **No validation against ground truth.** SAML-D includes an `Is_laundering` label, but this project's rule thresholds ($100K / $250K / 300 transactions) were chosen heuristically and not checked against it. A natural next step: compute precision/recall of the current rules against the true label, and use that to justify or retune the thresholds.
 - **No entity-resolution or network view.** Accounts are scored independently; a graph-based approach (shared receivers, device/IP overlap where available) would catch coordinated multi-account laundering rings that this account-by-account scoring misses.
 - **Static, batch-scored.** Everything here is computed once over the full dataset; a production system would need incremental/near-real-time scoring as new transactions arrive.
-- **Full raw data withheld** for repo size — reproducibility is via the SQL script, the dashboard tables, and the `.pbix` file instead.
+- **Full raw data and editable Power BI report are not included.** Reproduction is currently limited to the SQL script and the published `dashboard_cases.csv`; the transaction-level table-generation process remains undocumented.
 
 ---
 

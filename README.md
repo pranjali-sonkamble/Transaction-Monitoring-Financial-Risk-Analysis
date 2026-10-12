@@ -140,16 +140,24 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 
 ## Transaction-Level Baseline Evaluation
 
-The separate [transaction_rule_evaluation.sql](transaction_rule_evaluation.sql) script evaluates four **single-transaction amount-only baselines** (Amount > $50K, $100K, $250K, and $500K) directly against Is_laundering. It is read-only and does not alter the account-level risk tables. Run it locally against the full saml_d_raw table:
+The separate [transaction_rule_evaluation.sql](transaction_rule_evaluation.sql) script evaluates four **single-transaction amount-only baselines** directly against `Is_laundering`. It is read-only and does not alter the account-level risk tables. Run it locally against the full `saml_d_raw` table:
 
 ```bash
 sqlite3 -header -column saml_d.db < transaction_rule_evaluation.sql
 ```
 
-This isolates a key question: how does a transaction-level threshold perform compared with assigning an account's High/Severe status to every transaction that account sent? Review the confusion-matrix counts as well as precision, recall, and specificity. Check labeled_rows against total_rows; investigate any nonzero alerts_with_unrecognized_label before interpreting the metrics. The SQL treats 1/true/yes as positive and 0/false/no as negative labels. Threshold comparisons are strict (Amount > threshold).
+**Observed results from a local SQLite run on all 9,504,852 transactions** (9,873 positive labels; 9,494,979 negative labels; no unrecognized labels):
 
-**Interpretation caution:** amount-only rules are intentionally simplistic. A high-value transaction is not proof of laundering, and lower-value structuring or rapid repeated transfers may be missed. These metrics are diagnostic comparisons on synthetic SAML-D data—not production performance estimates or a basis for selecting a live AML threshold. The script must be run against the local raw dataset; no results are claimed here until its output is reviewed.
+| Alert rule | Alerted rows (TP + FP) | True positives | False positives | Precision | Recall | Specificity |
+|---|---:|---:|---:|---:|---:|---:|
+| Amount > $50,000 | 78,486 | 402 | 78,084 | 0.5122% | 4.0717% | 99.1776% |
+| Amount > $100,000 | 28,926 | 258 | 28,668 | 0.8919% | 2.6132% | 99.6981% |
+| Amount > $250,000 | 14,289 | 149 | 14,140 | 1.0428% | 1.5092% | 99.8511% |
+| Amount > $500,000 | 4,978 | 90 | 4,888 | 1.8080% | 0.9116% | 99.9485% |
 
+These are **transaction-level** metrics, unlike the account-level heuristic evaluated in `audit_validation.sql`, which applies a sender account's High/Severe status to all of that account's transactions. Higher amount thresholds improve precision and specificity but sharply reduce recall. The $500K threshold has the highest precision among these four baselines (1.8080%), but catches only 90 of 9,873 positive-label transactions (0.9116% recall). The $50K threshold catches more positives (402; 4.0717% recall) but generates 78,084 false-positive rows. No tested threshold is a sufficient standalone detection model.
+
+**Interpretation caution:** these results measure agreement with the synthetic dataset's `Is_laundering` labels, not verified real-world laundering. An unlabelled or negative transaction is not necessarily innocent, and a high-value transaction is not proof of laundering. Amount-only rules can also miss lower-value structuring or repeated transfers. These experiments are diagnostic comparisons, not production performance estimates or a basis for selecting live AML thresholds.
 ---
 ## How to Reproduce
 

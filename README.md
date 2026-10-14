@@ -1,6 +1,6 @@
 # Transaction Monitoring & Financial Risk Indicator Analysis
 
-An AML-style (Anti-Money Laundering) transaction monitoring system that identifies suspicious financial behavior, prioritizes high-risk accounts, and supports investigator decision-making using rule-based risk scoring and an interactive multi-page Power BI dashboard.
+An AML-style (Anti-Money Laundering) transaction-monitoring portfolio project that applies rule-based risk scoring to prioritize accounts for review and supports investigator workflows through an interactive multi-page Power BI dashboard. Rule-triggered flags are risk indicators, not confirmed laundering detections.
 
 ---
 
@@ -87,7 +87,7 @@ Each account starts at a risk score of 0. Points are added based on three indepe
 
 This is a deliberately simple, additive rule model rather than a weighted/ML-based one — the tradeoff is interpretability and regulatory explainability (a compliance officer can see exactly *why* an account was flagged) at the cost of missing more subtle multi-factor patterns an anomaly-detection model might catch.
 
-### Laundering-Type Classification
+### Dashboard Typology Labels (Unverified Provenance)
 
 The Power BI report displays a smaller typology-tagged transaction subset (approximately 3K transactions, according to the current dashboard). However, the tagging logic and provenance have not been verified against the SQL in this repository. These labels are therefore **dashboard classifications of unverified provenance**, not confirmed detections produced by the risk-scoring SQL. Do not interpret the tagged subset as a measured precision or as independently confirmed laundering.
 
@@ -100,7 +100,7 @@ A 5-page interactive Power BI report, moving from portfolio-level triage down to
 > **Dashboard validation caveat:** The Overview page's risk-account and transaction KPIs, donut labels, and the relationship between account-level risk scores and typology-tagged transaction rows have not yet been reconciled against the underlying model measures. Treat those visuals as a presentation preview until the measures and filter context are checked in Power BI Desktop. The SQL-derived account score is calculated from the full sender-account transaction history; a visual showing only a tagged transaction subset must not imply that the displayed subset alone generated the account's score.
 
 ### Overview
-Portfolio-level entry point: total risk accounts, high-risk accounts, transaction/risk trend over time, risk-level distribution, top laundering types, geographic distribution, and a table of recent suspicious transactions.
+Portfolio-level entry point: rule-scored accounts, transaction/risk trends, risk-level distribution, dashboard typology labels of unverified provenance, geographic distribution, and a table of rule-flagged transactions.
 ![Overview](docs/images/Overview.png)
 
 ### Transaction Intelligence

@@ -130,6 +130,14 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 - The dashboard's transaction-value trend appears relatively steady over the displayed period. Because SAML-D is synthetic, this may reflect assumptions in the data-generation process and should not be interpreted as evidence that real-world suspicious activity behaves routinely.
 - The dashboard displays a typology-tagged subset, but the provenance of those tags has not been verified. The share of this subset is not a validated measure of laundering detection quality.
 
+## Validation and limitations
+
+The account-level rule-based approach was checked against the dataset's `Is_laundering` labels by assigning each flagged sender account's status to its transaction rows. On the **synthetic SAML-D dataset**, the audit covered **13,424 flagged sender accounts** and reported **33.7% recall** and **0.07% precision** at transaction-row level. The low precision indicates that the current rules flag many transactions that do not match the dataset's positive labels; these results do not establish real-world AML detection performance.
+
+**Data limitation:** SAML-D is synthetic, not real banking activity. These measurements are a diagnostic validation of this rule set against synthetic labels, not evidence of confirmed laundering or production readiness.
+
+---
+
 ## Business Recommendations
 
 - Prioritize the ~6,400 accounts scoring **120 (Severe)** for manual investigation first — they account for the majority of flagged value and show the clearest multi-signal fingerprint (high value + high frequency + wide fan-out).

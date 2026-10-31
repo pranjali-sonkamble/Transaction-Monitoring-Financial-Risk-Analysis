@@ -89,7 +89,7 @@ This is a deliberately simple, additive rule model rather than a weighted/ML-bas
 
 ### Typology labels are excluded from claims
 
-The Power BI screenshots contain typology-style labels whose source field and transformation have not been traced. They are **not part of the documented SQL scoring rules** and are excluded from the project's findings and model-performance claims. Treat those labels as unverified screenshot artifacts until their provenance is established.
+The Power BI screenshots contain typology-style labels whose source field and transformation have not been traced. They are **not part of the documented SQL scoring rules** and are excluded from the project's findings and model-performance claims. Treat those labels as unverified screenshot artifacts until their provenance is established. Before using the dashboard in a public portfolio, replace these visuals with a refresh that excludes those labels or independently trace and validate the source field and transformation.
 
 ---
 

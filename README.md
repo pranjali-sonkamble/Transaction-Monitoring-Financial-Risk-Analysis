@@ -87,9 +87,9 @@ Each account starts at a risk score of 0. Points are added based on three indepe
 
 This is a deliberately simple, additive rule model rather than a weighted/ML-based one — the tradeoff is interpretability and regulatory explainability (a compliance officer can see exactly *why* an account was flagged) at the cost of missing more subtle multi-factor patterns an anomaly-detection model might catch.
 
-### Dashboard Typology Labels (Unverified Provenance)
+### Typology labels are excluded from claims
 
-The Power BI report displays a smaller typology-tagged transaction subset (approximately 3K transactions, according to the current dashboard). However, the tagging logic and provenance have not been verified against the SQL in this repository. These labels are therefore **dashboard classifications of unverified provenance**, not confirmed detections produced by the risk-scoring SQL. Do not interpret the tagged subset as a measured precision or as independently confirmed laundering.
+The Power BI screenshots contain typology-style labels whose source field and transformation have not been traced. They are **not part of the documented SQL scoring rules** and are excluded from the project's findings and model-performance claims. Treat those labels as unverified screenshot artifacts until their provenance is established.
 
 ---
 
@@ -97,10 +97,10 @@ The Power BI report displays a smaller typology-tagged transaction subset (appro
 
 A 5-page interactive Power BI report, moving from portfolio-level triage down to single-transaction investigation:
 
-> **Dashboard validation caveat:** The Overview page's risk-account and transaction KPIs, donut labels, and the relationship between account-level risk scores and typology-tagged transaction rows have not yet been reconciled against the underlying model measures. Treat those visuals as a presentation preview until the measures and filter context are checked in Power BI Desktop. The SQL-derived account score is calculated from the full sender-account transaction history; a visual showing only a tagged transaction subset must not imply that the displayed subset alone generated the account's score.
+> **Dashboard validation caveat:** The Overview page's risk-account and transaction KPIs and donut labels have not yet been reconciled against the underlying model measures. Treat the screenshots as a presentation preview until measures and filter context are checked in Power BI Desktop. Typology-style labels are omitted from the findings because their provenance is unverified.
 
 ### Overview
-Portfolio-level entry point: rule-scored accounts, transaction/risk trends, risk-level distribution, dashboard typology labels of unverified provenance, geographic distribution, and a table of rule-flagged transactions.
+Portfolio-level entry point: rule-scored accounts, transaction/risk trends, risk-level distribution, geographic distribution, and a table of rule-flagged transactions. Typology-style screenshot labels are not interpreted as project outputs.
 ![Overview](docs/images/Overview.png)
 
 ### Transaction Intelligence
@@ -128,7 +128,6 @@ Case-level drill-through: a filterable transaction investigation table, an inves
 - A case-level drill-through surfaced a concrete structuring pattern: one account made **11 cross-border transfers to the same receiver within a single day**, each individually in the $20K–21K range — well under any single-transaction alert threshold, but cumulatively over $230K in a day. This is exactly the kind of activity a pure "amount > $100K" rule would miss, which is why the frequency-based rule (+40 for >300 transactions) matters as a complementary signal.
 - Geographic analysis is now quantified: the **UK** leads both in transaction volume and in the number of flagged/risk transactions, while **Switzerland** shows the highest cross-border transaction *value* among non-UK countries. The most active cross-border corridors are UK→Mexico, UK→India, and UK→Germany.
 - The dashboard's transaction-value trend appears relatively steady over the displayed period. Because SAML-D is synthetic, this may reflect assumptions in the data-generation process and should not be interpreted as evidence that real-world suspicious activity behaves routinely.
-- The dashboard displays a typology-tagged subset, but the provenance of those tags has not been verified. The share of this subset is not a validated measure of laundering detection quality.
 
 ## Validation and limitations
 

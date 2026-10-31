@@ -21,7 +21,7 @@ An AML-style (Anti-Money Laundering) transaction-monitoring portfolio project th
 
 ## Problem Statement
 
-Financial institutions must flag suspicious transaction patterns for regulatory compliance (AML/KYC). Manually reviewing millions of transactions is infeasible — this project simulates a **rule-based triage workflow** that ranks accounts for further review. In the current output, **13,424 distinct sender accounts** are flagged High/Severe, and their transactions account for approximately **50.0% of all transaction rows**. The account-level rule heuristic has been evaluated against the dataset's `Is_laundering` labels at transaction-row level; see [Validation and limitations](#validation-and-limitations). The results show substantial false positives, so this is a diagnostic prioritization prototype—not a validated or efficient production review queue.
+Financial institutions must flag suspicious transaction patterns for regulatory compliance (AML/KYC). Manually reviewing millions of transactions is infeasible — this project simulates a **rule-based triage workflow** that ranks accounts for further review. In the current output, **13,424 distinct sender accounts** are flagged High/Severe, and their transactions account for approximately **50.0% of all transaction rows**. A prior local audit compared account-level flags against the dataset's `Is_laundering` labels at transaction-row level; see [Validation and limitations](#validation-and-limitations) for the reported figures and limitations. The results show substantial false positives, so this is a diagnostic prioritization prototype—not a validated or efficient production review queue.
 
 ---
 
@@ -29,7 +29,7 @@ Financial institutions must flag suspicious transaction patterns for regulatory 
 
 This project uses **SAML-D**, a published synthetic anti-money-laundering benchmark dataset (Oztas et al.), containing **9,504,852 transactions** across 12 features, including sender/receiver account IDs, amount, payment type, and sender/receiver bank locations. The dashboard shows a date range of **October 2022 to August 2023**; this describes the preview, not a claim of uniform monthly coverage. SAML-D is synthetic benchmark data, not real bank activity, so patterns observed here must not be generalized directly to real financial institutions or real-world laundering prevalence.
 
-> **Label and validation caveat:** SAML-D includes a ground-truth `Is_laundering` field. The SQL scoring rules in this repository do **not** use that field and have not been evaluated against it. The source and derivation of the typology labels currently displayed in the Power BI report have not been independently verified; therefore, those labels must not be presented as typologies detected by this SQL rule engine. See [Limitations](#limitations--future-work).
+> **Label and validation caveat:** SAML-D includes a ground-truth `Is_laundering` field. The SQL scoring rules do **not** use that field to create alerts. The separate audit SQL uses it only to evaluate the rule flags against synthetic labels. The provenance of typology-style labels in screenshots remains unverified; these labels are not produced by the documented SQL rules and must not be presented as detected typologies.
 
 ---
 
@@ -168,20 +168,26 @@ These are **transaction-level** metrics, unlike the account-level heuristic eval
 ---
 ## Combined Transaction-Level Rule Experiment
 
-The separate [combined_transaction_rule_evaluation.sql](combined_transaction_rule_evaluation.sql) script compares three individual signals with a combined OR rule. It is read-only and leaves `risk_rules.sql` and the Power BI model unchanged. The behavioral window is one calendar day, grouped by the exact source `Date` value:
+The repository includes [combined_transaction_rule_evaluation.sql](combined_transaction_rule_evaluation.sql) and a faster variant, [combined_transaction_rule_evaluation_fast.sql](combined_transaction_rule_evaluation_fast.sql). They compare three individual signals with a combined OR rule, without modifying the persistent scoring outputs or Power BI model. The one-calendar-day window groups by the exact source `Date` value (not a rolling 24-hour window):
 
-- **A — Amount:** flag a transaction when `Amount > 100000`.
-- **B — Sender velocity:** flag transactions from a sender with more than 10 transactions on that date.
-- **C — Repeated sender/receiver pair:** flag transactions where the same sender paid the same receiver at least 3 times on that date.
-- **D — Combined:** flag a transaction if any of A, B, or C applies.
+- **A — Amount:** `Amount > 100000`.
+- **B — Sender velocity:** sender has more than 10 transactions on the same date.
+- **C — Repeated sender/receiver pair:** the same sender paid the same receiver at least 3 times on the same date.
+- **D — Combined:** A OR B OR C.
 
-Run locally from the project root:
+Run from the repository root, using the database you created locally:
 
-```bat
-"C:\Program Files\SQLite ODBC Driver for Win64\sqlite3.exe" -header -column database\aml_monitoring.db < sql\combined_transaction_rule_evaluation.sql
+```bash
+sqlite3 -header -column saml_d.db < combined_transaction_rule_evaluation.sql
 ```
 
-The output compares alert counts, confusion-matrix counts, precision, recall, and specificity against `Is_laundering`. Confirm that `labeled_rows` equals `total_rows` and `alerts_with_unrecognized_label` is zero before interpreting metrics. The date window uses the source's exact `Date` value; it does not parse timestamps or measure rolling 24-hour windows. These thresholds are exploratory, not production recommendations. No results are claimed until the script is run on the full local dataset and reviewed.
+For the faster temporary-table version:
+
+```bash
+sqlite3 -header -column saml_d.db < combined_transaction_rule_evaluation_fast.sql
+```
+
+These scripts read the `saml_d_raw` table in `saml_d.db`; they do not require a `database/` directory or an `sql/` subdirectory. The output compares alert counts, confusion-matrix counts, precision, recall, and specificity against `Is_laundering`. Confirm `labeled_rows` equals `total_rows` and `alerts_with_unrecognized_label` is zero before interpreting metrics. The scripts have not been run as part of this documentation update, so no combined-rule performance results are claimed.
 
 ---
 
